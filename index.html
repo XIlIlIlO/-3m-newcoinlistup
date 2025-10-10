@@ -44,20 +44,20 @@
     }
 
     li.coin-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #1b1b1b;   /* ✅ 기존 #111 → 약간 더 밝은 톤 */
-  padding: 10px 16px;
-  border-radius: 8px;
-  transition: all 0.25s ease;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.05); /* ✅ 은은한 외곽 그림자 */
-}
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1b1b1b;   /* 밝게 */
+      padding: 10px 16px;
+      border-radius: 8px;
+      transition: all 0.25s ease;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.05);
+    }
     li.coin-item:hover {
-  background: #2a2a2a;   /* ✅ hover 시 조금 더 밝게 */
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.15); /* ✅ hover 시 초록빛 glow */
-}
+      background: #2a2a2a;
+      transform: translateY(-2px);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.15);
+    }
 
     /* 글씨 10% 축소 + 흰색 */
     .symbol {
@@ -72,6 +72,12 @@
       font-size: 13px;
       margin-left: 8px;
       white-space: nowrap;
+    }
+    /* ✅ 숫자만 살짝 더 크고 흰색으로 강조 */
+    .meta .num {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
     }
   </style>
 </head>
@@ -116,7 +122,6 @@
 
     function fmtRange(x) {
       if (x === undefined || x === null || isNaN(x)) return "-";
-      // 정수에 가깝다면 0자리, 아니면 한 자리
       return (Math.abs(x - Math.round(x)) < 0.05 ? Math.round(x) : x.toFixed(1)) + "%";
     }
 
@@ -139,10 +144,14 @@
           window.open(url, "_blank");
         });
 
-      // Max변동폭 + 상장 후 경과일
+      // Max변동폭 + 상장 후 경과일 (숫자 강조)
       items.append("span")
         .attr("class", "meta")
-        .text(d => `Max변동폭: ${fmtRange(d.max_range_pct)} · 상장 후 약 ${d.days}일`);
+        .html(d => {
+          const range = fmtRange(d.max_range_pct).replace(/([\d.]+)%/, '<span class="num">$1</span>%');
+          const days  = String(d.days).replace(/(\d+)/, '<span class="num">$1</span>');
+          return `Max변동폭: ${range} · 상장 후 약 ${days}일`;
+        });
     }
 
     async function updateList() {
