@@ -31,19 +31,17 @@
     #time { margin-bottom: 20px; font-size: 16px; color: #cccccc; }
     #countdown { margin-left: 20px; color: #888; }
 
-    /* ✅ 리스트 컨테이너를 그리드로 변경 (2열) */
-    /* ✅ 리스트 컨테이너를 그리드로 변경 (2~3열 자동 + 오른쪽 여백 확보) */
+    /* 리스트: 2~N열 자동 + 오른쪽 여백 확보 */
     ul#coin-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 10px 20px;
-  padding-right: 40px;  /* ✅ 오른쪽에 공백 추가 */
-  box-sizing: border-box;
-}
-
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 10px 20px;
+      padding-right: 40px;  /* 오른쪽에 공백 추가 */
+      box-sizing: border-box;
+    }
 
     li.coin-item {
       display: flex;
@@ -59,17 +57,19 @@
       transform: translateY(-2px);
     }
 
-    /* ✅ 글씨 크기 10% 축소 + 흰색 */
+    /* 글씨 10% 축소 + 흰색 */
     .symbol {
       font-weight: bold;
       font-size: 16px;
       color: white;
       cursor: pointer;
+      white-space: nowrap;
     }
-    .listed {
+    .meta {
       color: #ccc;
       font-size: 13px;
       margin-left: 8px;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -112,6 +112,12 @@
       }
     }
 
+    function fmtRange(x) {
+      if (x === undefined || x === null || isNaN(x)) return "-";
+      // 정수에 가깝다면 0자리, 아니면 한 자리
+      return (Math.abs(x - Math.round(x)) < 0.05 ? Math.round(x) : x.toFixed(1)) + "%";
+    }
+
     function renderList(data) {
       const list = d3.select("#coin-list");
       list.selectAll("li").remove();
@@ -122,20 +128,19 @@
         .append("li")
         .attr("class", "coin-item");
 
-      // ✅ 코인명 + 상장일 함께 표시
+      // 번호 + 코인명 (클릭 시 바이낸스 선물 링크)
       items.append("span")
         .attr("class", "symbol")
-        .text(d => d.symbol)
+        .text((d, i) => `${i + 1}. ${d.symbol}`)
         .on("click", (event, d) => {
           const url = `https://www.binance.com/en/futures/${d.symbol}`;
           window.open(url, "_blank");
-        })
-        .each(function(d) {
-          const parent = d3.select(this.parentNode);
-          parent.append("span")
-            .attr("class", "listed")
-            .text(`상장 후 약 ${d.days}일`);
         });
+
+      // Max변동폭 + 상장 후 경과일
+      items.append("span")
+        .attr("class", "meta")
+        .text(d => `Max변동폭: ${fmtRange(d.max_range_pct)} · 상장 후 약 ${d.days}일`);
     }
 
     async function updateList() {
@@ -144,7 +149,8 @@
       const data = await fetchData();
       if (!data || data.length === 0) return;
 
-      const sorted = data.sort((a, b) => a.days - b.days);
+      // 상장부터의 기간순(일봉 적은 순) 정렬
+      const sorted = data.slice().sort((a, b) => a.days - b.days);
       renderList(sorted);
     }
 
@@ -153,4 +159,6 @@
     startCountdown();
   </script>
 </body>
+</html>
+
 </html>
