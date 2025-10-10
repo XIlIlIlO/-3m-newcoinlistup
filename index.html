@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>상장 3개월 이내 신규 코인 리스트</title>
+  <title>SUPERHERO 신규 상장 코인 리스트 (3개월 이내)</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     html, body {
@@ -26,42 +26,46 @@
       font-size: 26px;
       font-weight: bold;
       margin-bottom: 10px;
+      color: white;
     }
     #time { margin-bottom: 20px; font-size: 16px; color: #cccccc; }
     #countdown { margin-left: 20px; color: #888; }
 
+    /* ✅ 리스트 컨테이너를 그리드로 변경 (2열) */
     ul#coin-list {
       list-style: none;
       padding: 0;
       margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 10px 20px;
     }
+
     li.coin-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #111;
-      margin-bottom: 8px;
-      padding: 12px 20px;
-      border-radius: 10px;
+      padding: 10px 16px;
+      border-radius: 8px;
       transition: all 0.2s ease;
     }
     li.coin-item:hover {
       background: #222;
-      transform: translateX(4px);
+      transform: translateY(-2px);
     }
+
+    /* ✅ 글씨 크기 10% 축소 + 흰색 */
     .symbol {
       font-weight: bold;
-      font-size: 18px;
-      color: #00ff88;
+      font-size: 16px;
+      color: white;
       cursor: pointer;
     }
-    .days {
-      color: #aaa;
-      font-size: 14px;
-    }
     .listed {
-      color: #999;
+      color: #ccc;
       font-size: 13px;
+      margin-left: 8px;
     }
   </style>
 </head>
@@ -114,21 +118,20 @@
         .append("li")
         .attr("class", "coin-item");
 
+      // ✅ 코인명 + 상장일 함께 표시
       items.append("span")
         .attr("class", "symbol")
         .text(d => d.symbol)
         .on("click", (event, d) => {
           const url = `https://www.binance.com/en/futures/${d.symbol}`;
           window.open(url, "_blank");
+        })
+        .each(function(d) {
+          const parent = d3.select(this.parentNode);
+          parent.append("span")
+            .attr("class", "listed")
+            .text(`상장 후 약 ${d.days}일`);
         });
-
-      items.append("span")
-        .attr("class", "days")
-        .text(d => `일봉 수: ${d.days}`);
-
-      items.append("span")
-        .attr("class", "listed")
-        .text(d => `상장 후 약 ${d.days}일 경과`);
     }
 
     async function updateList() {
@@ -137,7 +140,6 @@
       const data = await fetchData();
       if (!data || data.length === 0) return;
 
-      // 일봉 적은 순 정렬
       const sorted = data.sort((a, b) => a.days - b.days);
       renderList(sorted);
     }
